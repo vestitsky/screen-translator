@@ -1,73 +1,51 @@
 import os
-
 import subprocess
 import pytesseract
 
 from PIL import Image
 from datetime import datetime
 from deep_translator import GoogleTranslator
+import tkinter as tk
 
 def capture_selected_region():
-    """Выделение области и захват скриншота"""
     try:
-        # Получить координаты выделенной области
         region = subprocess.check_output(["slurp"]).decode().strip()
     except subprocess.CalledProcessError:
-        print("Выделение области отменено.")
+        print("Выделение отменено.")
         return None
 
-    # Путь к временному файлу
-    filename = f"/tmp/screen_region_{datetime.now().strftime('%H%M%S')}.png"
-
-    # Сделать скриншот
+    filename = f"/tmp/screen_{datetime.now().strftime('%H%M%S')}.png"
     subprocess.run(["grim", "-g", region, filename], check=True)
-
     return filename
 
 def extract_text_from_image(image_path, lang="eng"):
-    """Извлекает текст из изображения"""
     try:
         image = Image.open(image_path)
-        text = pytesseract.image_to_string(image, lang=lang)
-        return text
+        return pytesseract.image_to_string(image, lang=lang)
     except Exception as e:
         print(f"OCR ошибка: {e}")
         return ""
 
-def capture_and_ocr(lang="eng"):
-    """Комбинированный шаг: выделение + захват + OCR"""
-    image_path = capture_selected_region()
-    if not image_path:
+def translate_image(lang="eng"):
+    path = capture_selected_region()
+    if not path:
         return ""
+    text = extract_text_from_image(path, lang=lang)
+    if os.path.exists(path):
+        os.remove(path)
+    return GoogleTranslator(source='auto', target='ru').translate(text)
 
-    text = extract_text_from_image(image_path, lang=lang)
+def show_result(text):
+    win = tk.Tk()
+    win.title("Результат перевода")
+    win.geometry("600x400")
+    txt = tk.Text(win, wrap='word')
+    txt.insert("1.0", text)
+    txt.pack(expand=True, fill='both')
+    win.mainloop()
 
-    # Удалить скриншот после использования
-    if os.path.exists(image_path):
-        os.remove(image_path)
-
-    return text
-
-def translate(lang="eng"):
-    """Комбинированный шаг: выделение + захват + OCR + перевод"""
-    image_path = capture_selected_region()
-    if not image_path:
-        return ""
-
-    text = extract_text_from_image(image_path, lang=lang)
-
-    # Удалить скриншот
-    if os.path.exists(image_path):
-        os.remove(image_path)
-
-    # Перевод
-    translated = GoogleTranslator(source='auto', target='ru').translate(text)
-    return translated
-
-
-# Пример запуска
 if __name__ == "__main__":
-    result = translate(lang="eng+rus")
-    print("Распознанный текст:\n")
-    print(result)
+    result = translate_image(lang="eng+rus")
+    if result.strip():
+        show_result(result)
 
