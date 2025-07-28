@@ -1,79 +1,55 @@
-# README for Screen Translator
-
 # Screen Translator
 
-Screen Translator is a Python application that captures a selected region of the screen, extracts text from the image using Optical Character Recognition (OCR), translates the text, and displays the result in a graphical user interface (GUI) window.
+**Screen Translator** is a simple Linux application that allows you to select a screen region or choose image files, recognize text (OCR), and translate it into Russian. The interface is built with Tkinter.
 
 ## Features
 
-- Capture a selected region of the screen.
-- Extract text from images using OCR.
-- Translate extracted text into a specified language.
-- Display the translated text in a user-friendly GUI.
-
-## Requirements
-
-Before running the application, ensure you have the following dependencies installed:
-
-- Python 3.x
-- `pytesseract`
-- `Pillow`
-- `deep-translator`
-
-You can install the required Python packages using the following command:
-
-```bash
-pip install -r requirements.txt
-```
+- Select images for text recognition or translation.
+- Capture a selected screen region (Wayland, grim + slurp).
+- Recognize text using Tesseract OCR.
+- Translate recognized text into Russian via Google Translator.
+- User-friendly graphical interface.
 
 ## Installation
 
-1. Clone the repository:
+Install system dependencies (Arch Linux):
+```bash
+sudo pacman -S tesseract tesseract-data-eng tesseract-data-rus grim slurp python-pip
+```
 
-   ```bash
-   git clone <repository-url>
-   cd screen-translator
-   ```
-
-2. (Optional) Create a virtual environment:
-
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
-
-3. Install the application:
-
-   ```bash
-   python setup.py install
-   ```
-
-4. Make the application executable:
-
-   ```bash
-   chmod +x install.sh
-   ./install.sh
-   ```
-
-5. Create a desktop entry for easy access:
-
-   The `screen-translator.desktop` file is included in the project. You can copy it to your local applications directory:
-
-   ```bash
-   cp screen-translator.desktop ~/.local/share/applications/
-   ```
+Install Python dependencies:
+```bash
+pip install -r requirements.txt
+```
+or using [uv](https://github.com/astral-sh/uv):
+```bash
+uv pip install -r requirements.txt
+```
 
 ## Usage
 
-To run the application, you can either:
-
-- Launch it from the application menu.
-- Run the following command in the terminal:
-
 ```bash
-python src/main.py
+python main.py
 ```
 
-## License
+1. When launched, a window will appear with action choices:
+    - Recognize text from images
+    - Translate text from images
+    - Recognize text from a selected screenshot
+    - Translate text from a selected screenshot
+2. Follow the instructions in the program window.
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+## Dependencies
+
+- Python 3.13+
+- [pytesseract](https://pypi.org/project/pytesseract/)
+- [Pillow](https://pypi.org/project/Pillow/)
+- [deep-translator](https://pypi.org/project/deep-translator/)
+- [tkinter](https://docs.python.org/3/library/tkinter.html)
+- grim, slurp (for screen capture, Wayland only)
+
+## Notes
+
+- For OCR in Russian, install the `tesseract-data-rus` package.
+- The program works only in Wayland environments with grim/slurp.
+- Internet connection is required for translation.
