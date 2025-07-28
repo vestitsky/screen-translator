@@ -1,9 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Name=Screen Translator
-Comment=Capture screen region, extract text, and translate it
-Exec=python3 /path/to/screen-translator/src/main.py
-Icon=/path/to/icon.png
-Terminal=false
-Type=Application
-Categories=Utility;Application;
