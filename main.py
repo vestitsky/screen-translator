@@ -7,6 +7,7 @@ from datetime import datetime
 from deep_translator import GoogleTranslator
 import tkinter as tk
 from tkinter import filedialog as fd
+from tkinter import ttk
 
 def select_image_files():
     root = tk.Tk()
@@ -49,79 +50,108 @@ def translate_image(lang="eng"):
         os.remove(path)
     return GoogleTranslator(source='auto', target='ru').translate(text)
 
-def show_result(text):
-    win = tk.Tk()
-    win.title("Результат перевода")
-    win.geometry("600x400")
-    win.configure(bg="black")
 
-    txt = tk.Text(
-        win,
+def create_main_window(initial_text=""):
+    def translate_current_text():
+        current_text = text_widget.get("1.0", tk.END).strip()
+        if not current_text:
+            return
+        
+        target_lang = lang_var.get()
+        if target_lang == "Выберите язык":
+            return
+            
+        try:
+            translated = GoogleTranslator(source='auto', target=target_lang).translate(current_text)
+            text_widget.delete("1.0", tk.END)
+            text_widget.insert("1.0", translated)
+        except Exception as e:
+            print(f"Ошибка перевода: {e}")
+    
+    def add_files_text():
+        files = select_image_files()
+        if not files:
+            return
+            
+        for file_path in files:
+            if os.path.exists(file_path):
+                try:
+                    file_text = extract_text_from_image(file_path, lang="eng+rus")
+                    if file_text.strip():
+                        current_text = text_widget.get("1.0", tk.END)
+                        if current_text.strip():
+                            text_widget.insert(tk.END, "\n\n--- Из файла ---\n")
+                        text_widget.insert(tk.END, file_text)
+                except Exception as e:
+                    print(f"Ошибка обработки файла {file_path}: {e}")
+    
+    win = tk.Tk()
+    win.title("Screen Translator")
+    win.geometry("800x600")
+    win.configure(bg="black")
+    
+    # Главный фрейм
+    main_frame = tk.Frame(win, bg="black")
+    main_frame.pack(expand=True, fill='both', padx=10, pady=10)
+    
+    # Фрейм для кнопок
+    button_frame = tk.Frame(main_frame, bg="black")
+    button_frame.pack(fill='x', pady=(0, 10))
+    
+    # Выпадающий список для выбора языка
+    lang_var = tk.StringVar(value="ru")
+    lang_options = {
+        "ru": "Русский", 
+        "en": "English",
+        "de": "Deutsch",
+        "fr": "Français",
+        "es": "Español",
+        "it": "Italiano",
+        "pt": "Português",
+        "pl": "Polski",
+        "uk": "Українська"
+    }
+    
+    lang_label = tk.Label(button_frame, text="Перевести на:", bg="black", fg="white", font=("Arial", 12))
+    lang_label.pack(side='left', padx=(0, 5))
+    
+    lang_combo = ttk.Combobox(button_frame, textvariable=lang_var, values=list(lang_options.keys()), 
+                              state="readonly", width=12)
+    lang_combo.pack(side='left', padx=(0, 10))
+    
+    # Кнопка перевода
+    translate_btn = tk.Button(button_frame, text="Перевести", font=("Arial", 12), 
+                             command=translate_current_text, bg="darkblue", fg="white")
+    translate_btn.pack(side='left', padx=(0, 10))
+    
+    # Кнопка добавления файлов
+    files_btn = tk.Button(button_frame, text="Распознать файлы", font=("Arial", 12), 
+                         command=add_files_text, bg="darkgreen", fg="white")
+    files_btn.pack(side='left')
+    
+    # Текстовое поле
+    text_widget = tk.Text(
+        main_frame,
         wrap='word',
         bg="black",
         fg="white",
         insertbackground="white",
-        font=("Arial", 18)
+        font=("Arial", 14)
     )
-    txt.insert("1.0", text)
-    txt.pack(expand=True, fill='both')
+    text_widget.insert("1.0", initial_text)
+    text_widget.pack(expand=True, fill='both')
+    
     win.mainloop()
 
-def main_menu():
-    def set_mode(val):
-        nonlocal mode
-        mode = val
-        root.destroy()
-
-    mode = None
-    root = tk.Tk()
-    root.title("Screen Translator — выбор действия")
-    root.geometry("400x300")
-    root.configure(bg="black")
-
-    outer_frame = tk.Frame(root, bg="black")
-    outer_frame.pack(expand=True, fill='both')
-
-    inner_frame = tk.Frame(outer_frame, bg="black")
-    inner_frame.place(relx=0.5, rely=0.5, anchor='center')
-
-    btn1 = tk.Button(inner_frame, text="Распознать текст с изображений", font=("Arial", 14), command=lambda: set_mode("extract_images"))
-    btn2 = tk.Button(inner_frame, text="Перевести текст с изображений", font=("Arial", 14), command=lambda: set_mode("translate_images"))
-    btn3 = tk.Button(inner_frame, text="Распознать текст с выделенного скриншота", font=("Arial", 14), command=lambda: set_mode("extract_screenshot"))
-    btn4 = tk.Button(inner_frame, text="Перевести текст с выделенного скриншота", font=("Arial", 14), command=lambda: set_mode("translate_screenshot"))
-
-    for btn in (btn1, btn2, btn3, btn4):
-        btn.pack(pady=10, fill='x', padx=20)
-
-    root.mainloop()
-    return mode
 
 if __name__ == "__main__":
-    mode = main_menu()
-    if mode == "extract_images":
-        images_list = select_image_files()
-        for path in images_list:
-            if os.path.exists(path):
-                text = extract_text_from_image(path, lang="eng+rus")
-                show_result(text)
-            else:
-                print(f"Файл не найден: {path}")
-    elif mode == "translate_images":
-        images_list = select_image_files()
-        for path in images_list:
-            if os.path.exists(path):
-                text = extract_text_from_image(path, lang="eng+rus")
-                translated = GoogleTranslator(source='auto', target='ru').translate(text)
-                show_result(translated)
-            else:
-                print(f"Файл не найден: {path}")
-    elif mode == "extract_screenshot":
-        path = capture_selected_region()
-        if path and os.path.exists(path):
+    path = capture_selected_region()
+    if path and os.path.exists(path):
+        try:
             text = extract_text_from_image(path, lang="eng+rus")
-            show_result(text)
-            os.remove(path)
-    elif mode == "translate_screenshot":
-        result = translate_image(lang="eng+rus")
-        if result.strip():
-            show_result(result)
+            create_main_window(text)
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
+    else:
+        print("Скриншот не сделан или отменен.")
