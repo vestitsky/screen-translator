@@ -85,6 +85,13 @@ def create_main_window(initial_text=""):
                 except Exception as e:
                     print(f"Ошибка обработки файла {file_path}: {e}")
     
+    def copy_to_clipboard():
+        text_to_copy = text_widget.get("1.0", tk.END).strip()
+        if not text_to_copy:
+            return
+        win.clipboard_clear()
+        win.clipboard_append(text_to_copy)
+
     win = tk.Tk()
     win.title("Screen Translator")
     win.geometry("800x600")
@@ -127,7 +134,12 @@ def create_main_window(initial_text=""):
     # Кнопка добавления файлов
     files_btn = tk.Button(button_frame, text="Распознать файлы", font=("Arial", 12), 
                          command=add_files_text, bg="darkgreen", fg="white")
-    files_btn.pack(side='left')
+    files_btn.pack(side='left', padx=(0, 10))
+    
+    # Кнопка Копировать
+    copy_btn = tk.Button(button_frame, text="Копировать", font=("Arial", 12), 
+                         command=copy_to_clipboard, bg="darkgoldenrod", fg="white")
+    copy_btn.pack(side='left')
     
     # Текстовое поле
     text_widget = tk.Text(
